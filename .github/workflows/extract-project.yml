@@ -1,0 +1,39 @@
+name: Extract project archive
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract project structure
+        run: |
+          set -euo pipefail
+          test -f manager-data-ai-android-project.tar.gz
+          tar -xzf manager-data-ai-android-project.tar.gz
+          rm manager-data-ai-android-project.tar.gz
+          test -d android
+          test -d backend
+          test -f PROJECT_LAYOUT.md
+
+      - name: Commit extracted project
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android/ backend/ PROJECT_LAYOUT.md .github/workflows/extract-project.yml
+          if git diff --cached --quiet; then
+            echo 'No extracted project changes to commit.'
+          else
+            git commit -m 'Extract Manager Data AI project structure'
+            git push origin HEAD:main
+          fi  
